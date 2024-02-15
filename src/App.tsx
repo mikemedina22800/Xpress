@@ -5,6 +5,7 @@ import Register from './auth/forms/Register'
 import { Home } from './root/pages'
 import AuthLayout from './auth/AuthLayout'
 import RootLayout from './root/RootLayout'
+import { Toaster } from './components/ui/toaster'
 
 
 const App = () => {
@@ -19,6 +20,7 @@ const App = () => {
           <Route index element={<Home/>}/>
         </Route>
       </Routes>
+      <Toaster/>
     </main>
   )
 } 

@@ -3,14 +3,22 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { RegisterValidation } from "@/lib/validation"
 import Loader from "@/components/ui/shared/Loader"
-import { Link } from "react-router-dom"
-import { createUserAccount } from "@/lib/appwrite/api"
+import { Link, useNavigate } from "react-router-dom"
+import { useToast } from "@/components/ui/use-toast"
+import { useCreateUserAccount, useSignInAccount } from "@/lib/react-query/queriesAndMutations"
+import { useUserContext } from "@/context/authContext"
 
 const Register = () => {
-  const isLoading = false
+  const { toast } = useToast()
+  const { checkAuthUser, isLoading: isUserLoading } = useUserContext()
+  const navigate = useNavigate()
+
+  const { mutateAsync: createUserAccount, isPending: isLoggingIn } = useCreateUserAccount();
+
+  const { mutateAsync: signInAccount, isPending: isRegistering } = useSignInAccount();
 
   const form = useForm<z.infer<typeof RegisterValidation>>({
     resolver: zodResolver(RegisterValidation),
@@ -22,10 +30,35 @@ const Register = () => {
     },
   })
 
-  async function onSubmit(values: z.infer<typeof RegisterValidation>) {
+  async function onSubmit(values: z.infer<typeof RegisterValidation>){
    const newUser = await createUserAccount(values)
 
-   console.log(newUser)
+    if(!newUser) {
+      return toast({
+        title: 'Email is invalid or associated with an existing account.'
+      })
+    }
+
+    const session = await signInAccount({
+      email: values.email,
+      password: values.password,
+    })
+
+    if(!session) {
+      return toast({ title: 'Invalid email or password.'})
+    }
+
+    const isLoggedIn = await checkAuthUser()
+
+    if(isLoggedIn) {
+      form.reset();
+
+      navigate('/')
+    } else {
+      return toast({
+        title: 'Email is invalid or associated with an existing account.'
+      })
+    }
   }
 
   return (
@@ -87,12 +120,12 @@ const Register = () => {
             )}
           />
           <Button type="submit" className="shad-button_primary">
-            {isLoading ? (
-              <div className="flex center gap-2 items-center">
-                <Loader/> Loading...
+            {isRegistering || isLoggingIn || isUserLoading ? (
+              <div className="flex-center gap-2">
+                <Loader /> Loading...
               </div>
             ) : (
-              "Register"
+              "Sign Up"
             )}
           </Button>
           <p className="text-sm-regular text-light-2 text-center mt-2">
