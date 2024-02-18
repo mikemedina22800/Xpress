@@ -1,55 +1,7 @@
 import { ID, Query } from 'appwrite'
 import { INewUser } from "@/types";
 import { account, appwriteConfig, avatars, databases } from './config';
-
-export async function createUserAccount(user: INewUser) {
-  try {
-    const newAccount = await account.create(
-      ID.unique(),
-      user.email,
-      user.password,
-      user.name
-    );
-
-    if (!newAccount) throw Error;
-
-    const avatarUrl = avatars.getInitials(user.name);
-
-    const newUser = await saveUserToDB({
-      accountId: newAccount.$id,
-      name: newAccount.name,
-      email: newAccount.email,
-      username: user.username,
-      imageUrl: avatarUrl,
-    })
-    
-    return newUser
-
-  } catch (error) {
-    console.log(error)
-    return error
-  }
-}
-
-export async function saveUserToDB(user: {
-  accountId: string;
-  email: string;
-  name: string;
-  imageUrl: URL;
-  username?: string;
-}) {
-  try {
-    const newUser = await databases.createDocument(
-      appwriteConfig.databaseId,
-      appwriteConfig.usersCollectionId,
-      ID.unique(),
-      user
-    )
-    return newUser
-  } catch(err) {
-    console.log(err)
-  }
-}
+import { toast } from 'react-toastify';
 
 export async function signInAccount(user: {email: string; password: string; }) {
   try {
@@ -57,25 +9,48 @@ export async function signInAccount(user: {email: string; password: string; }) {
     return session;
   } catch(err) {
     console.log(err)
+    toast.error('Invalid email or password.')
+  }
+}
+
+export async function createUserAccount(user: INewUser) {
+  const accountId = ID.unique()
+  try {
+    account.create(accountId, user.email, user.password, user.name).then(() => {
+      saveUserToDB({accountId: accountId, name: user.name, email: user.email, username: user.username, imageUrl:  avatars.getInitials(user.name)}).then(() => {
+        account.createEmailSession(user.email, user.password)
+      })
+    })
+  } catch(err) {
+    console.log(err)
+    toast.error('Email is associated with an existing account.')
+  }
+}
+
+export async function saveUserToDB(user: {accountId: string; email: string; name: string; imageUrl: URL; username: string}) {
+  try {
+    databases.createDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.usersCollectionId,
+      ID.unique(),
+      user
+    )
+  } catch(err) {
+    console.log(err)
+    toast.error("Some information failed to upload.")
   }
 }
 
 export async function getCurrentUser() {
   try {
     const currentAccount = await account.get();
-
-    if(!currentAccount) throw Error;
-
     const currentUser = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.usersCollectionId,
       [Query.equal('accountId', currentAccount.$id)]
     )
-
-    if(!currentUser) throw Error;
-
     return currentUser.documents[0]
-  } catch(err) {
-    console.log(err)
+  } catch {
+    return null
   }
 }

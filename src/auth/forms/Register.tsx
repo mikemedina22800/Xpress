@@ -1,139 +1,101 @@
-import * as z from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { RegisterValidation } from "@/lib/validation"
-import Loader from "@/components/ui/shared/Loader"
-import { Link, useNavigate } from "react-router-dom"
-import { useToast } from "@/components/ui/use-toast"
-import { useCreateUserAccount, useSignInAccount } from "@/lib/react-query/queriesAndMutations"
-import { useUserContext } from "@/context/authContext"
+import { useState } from "react"
+import { Link } from "react-router-dom"
+import { EyeFilled, EyeInvisibleFilled } from "@ant-design/icons"
+import { createUserAccount } from "@/lib/appwrite/api"
+import { toast } from "react-toastify"
+
 
 const Register = () => {
-  const { toast } = useToast()
-  const { checkAuthUser, isLoading: isUserLoading } = useUserContext()
-  const navigate = useNavigate()
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
 
-  const { mutateAsync: createUserAccount, isPending: isLoggingIn } = useCreateUserAccount();
+  const [inputType, setInputType] = useState('password')
 
-  const { mutateAsync: signInAccount, isPending: isRegistering } = useSignInAccount();
+  const toggleVisibility = () => {
+    setInputType(inputType === 'password' ? 'text' : 'password')
+  }
 
-  const form = useForm<z.infer<typeof RegisterValidation>>({
-    resolver: zodResolver(RegisterValidation),
-    defaultValues: {
-      name: "",
-      username: "",
-      email: "", 
-      password:"",
-    },
-  })
+  const values = {
+    name: `${firstName} ${lastName}`,
+    email,
+    username,
+    password
+  }
 
-  async function onSubmit(values: z.infer<typeof RegisterValidation>){
-   const newUser = await createUserAccount(values)
-
-    if(!newUser) {
-      return toast({
-        title: 'Email is invalid or associated with an existing account.'
-      })
-    }
-
-    const session = await signInAccount({
-      email: values.email,
-      password: values.password,
+  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    createUserAccount(values).then(() => {
+      toast.success('Account created successfuly.')
     })
-
-    if(!session) {
-      return toast({ title: 'Invalid email or password.'})
-    }
-
-    const isLoggedIn = await checkAuthUser()
-
-    if(isLoggedIn) {
-      form.reset();
-
-      navigate('/')
-    } else {
-      return toast({
-        title: 'Email is invalid or associated with an existing account.'
-      })
-    }
   }
 
   return (
-    <Form {...form}>
-      <div className="sm:w-420 flex-center flex-col">
-        <h3 className="text-5xl font-bold">Snapagram</h3>
-        <h2 className="h3-bold md:h2-bold pt-5 sm:pt-12">Create a new account</h2>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5 w-full mt-4">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input type="text" className="shad-input" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="username"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Username</FormLabel>
-                <FormControl>
-                  <Input type="text" className="shad-input" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input type="email" className="shad-input" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input type="password" className="shad-input" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button type="submit" className="shad-button_primary">
-            {isRegistering || isLoggingIn || isUserLoading ? (
-              <div className="flex-center gap-2">
-                <Loader /> Loading...
-              </div>
-            ) : (
-              "Sign Up"
-            )}
-          </Button>
-          <p className="text-sm-regular text-light-2 text-center mt-2">
-              Already have an account? <Link to="/login" className="text-primary-500 font-bold">Log in</Link>.
-          </p>
-        </form>
+    <form className="sm:w-420 flex-center flex-col" onSubmit={submit}>
+      <h3 className="text-5xl font-bold mb-10">Snapagram</h3>
+      <div className="w-full mb-5">
+        <h1 className="mb-2">First Name</h1>
+        <input 
+          type='text' 
+          className="auth-input"         
+          pattern="[A-za-z]+" 
+          value={firstName} 
+          required 
+          onChange={(e) => {setFirstName(e.target.value)}}
+        />
       </div>
-    </Form>
+      <div className="w-full mb-5">
+        <h1 className="mb-2">Last Name</h1>
+        <input 
+          type='text' 
+          className="auth-input"         
+          pattern="[A-za-z]+" 
+          value={lastName} 
+          required 
+          onChange={(e) => {setLastName(e.target.value)}}
+        />
+      </div>
+      <div className="w-full mb-5">
+        <h1 className="mb-2">Username</h1>
+        <input 
+          type='text' 
+          className="auth-input"         
+          pattern="[a-zA-Z0-9\s]+" 
+          value={username} 
+          required 
+          onChange={(e) => {setUsername(e.target.value)}}
+        />
+      </div>
+      <div className="w-full mb-5">
+        <h1 className="mb-2">Email</h1>
+        <input 
+          type="email" 
+          className="auth-input" 
+          required onChange={(e) => {setEmail(e.target.value)}}
+        />
+      </div>
+      <div className="w-full">
+        <div className="w-full flex justify-between mb-2">
+          <h1>Password</h1>
+          <div className="text-xl flex items-center cursor-pointer" onClick={toggleVisibility}>
+            {inputType === 'password' && <EyeFilled/>}
+            {inputType === 'text' && <EyeInvisibleFilled/>}
+          </div>
+        </div>
+        <input 
+          type={inputType} 
+          className="auth-input"         
+          minLength={8}
+          value={password} 
+          required 
+          onChange={(e) => {setPassword(e.target.value)}}
+        />
+      </div>
+      <button type="submit" className="auth-button">Register</button>
+      <h1>Already have an account? Click <Link to="/login" className="text-purple-600">here</Link> to log in.</h1>
+    </form>
   )
 }
 
