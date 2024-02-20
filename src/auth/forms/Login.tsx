@@ -1,6 +1,5 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { signInAccount } from "@/lib/appwrite/api"
 import { EyeFilled, EyeInvisibleFilled } from "@ant-design/icons"
 import { toast } from "react-toastify"
 import { useSignInAccount } from "@/lib/react-query/queriesAndMutations"
@@ -27,7 +26,6 @@ const Login = () => {
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-
     signInAccount(values).then(() => {
       toast.success('Successfully logged in.')
       navigate('/')
@@ -64,7 +62,7 @@ const Login = () => {
       </div>
       <button type="submit" className="auth-button">
         {isSigningIn ? (
-          <div className="flex-center  gap-2">
+          <div className="flex-center gap-2">
             <Loader/>
           </div>
         ) : (
