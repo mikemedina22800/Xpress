@@ -1,8 +1,10 @@
 import { useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { signInAccount } from "@/lib/appwrite/api"
 import { EyeFilled, EyeInvisibleFilled } from "@ant-design/icons"
 import { toast } from "react-toastify"
+import { useSignInAccount } from "@/lib/react-query/queriesAndMutations"
+import { Loader } from "lucide-react"
 
 const Login = () => {
   const [email, setEmail] = useState('')
@@ -19,11 +21,16 @@ const Login = () => {
     password
   }
 
+  const { mutateAsync: signInAccount, isPending: isSigningIn } = useSignInAccount();
+
+  const navigate = useNavigate()
+
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
     signInAccount(values).then(() => {
       toast.success('Successfully logged in.')
+      navigate('/')
     })
   }
 
@@ -55,7 +62,15 @@ const Login = () => {
           onChange={(e) => {setPassword(e.target.value)}}
         />
       </div>
-      <button type="submit" className="auth-button">Log In</button>
+      <button type="submit" className="auth-button">
+        {isSigningIn ? (
+          <div className="flex-center  gap-2">
+            <Loader/>
+          </div>
+        ) : (
+          <h1>Log In</h1>
+        )}
+      </button>
       <h1>Don't have an account? Click <Link to="/register" className="text-purple-600">here</Link> to register.</h1>
     </form>
   )

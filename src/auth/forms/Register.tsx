@@ -1,9 +1,9 @@
 import { useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { EyeFilled, EyeInvisibleFilled } from "@ant-design/icons"
-import { createUserAccount } from "@/lib/appwrite/api"
 import { toast } from "react-toastify"
-
+import { useCreateUserAccount } from "@/lib/react-query/queriesAndMutations"
+import { Loader } from "lucide-react"
 
 const Register = () => {
   const [firstName, setFirstName] = useState('')
@@ -18,6 +18,8 @@ const Register = () => {
     setInputType(inputType === 'password' ? 'text' : 'password')
   }
 
+  const { mutateAsync: createUserAccount, isPending: isCreatingUser } = useCreateUserAccount();
+  
   const values = {
     name: `${firstName} ${lastName}`,
     email,
@@ -25,10 +27,13 @@ const Register = () => {
     password
   }
 
+  const navigate = useNavigate()
+
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     createUserAccount(values).then(() => {
       toast.success('Account created successfuly.')
+      navigate('/')
     })
   }
 
@@ -62,7 +67,7 @@ const Register = () => {
         <input 
           type='text' 
           className="auth-input"         
-          pattern="[a-zA-Z0-9\s]+" 
+          pattern="[A-Za-z0-9]+"
           value={username} 
           required 
           onChange={(e) => {setUsername(e.target.value)}}
@@ -93,7 +98,15 @@ const Register = () => {
           onChange={(e) => {setPassword(e.target.value)}}
         />
       </div>
-      <button type="submit" className="auth-button">Register</button>
+      <button type="submit" className="auth-button">
+        {isCreatingUser ? (
+          <div className="flex-center  gap-2">
+            <Loader/>
+          </div>
+        ) : (
+          <h1>Register</h1>
+        )}
+      </button>
       <h1>Already have an account? Click <Link to="/login" className="text-purple-600">here</Link> to log in.</h1>
     </form>
   )
