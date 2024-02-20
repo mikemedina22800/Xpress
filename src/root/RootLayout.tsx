@@ -1,4 +1,3 @@
-
 import { useContext } from "react"
 import TopBar from "@/components/shared/TopBar"
 import LeftSideBar from "@/components/shared/LeftSideBar"
@@ -9,7 +8,7 @@ import { AuthContext } from "@/App"
 const RootLayout = () => {
   const user = useContext(AuthContext)
   console.log(user)
-  
+
   return (
     <div className="w-full md:flex">
       <TopBar/>
