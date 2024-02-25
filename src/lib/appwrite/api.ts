@@ -3,11 +3,10 @@ import { INewUser } from "@/types";
 import { account, appwriteConfig, databases } from './config';
 import { toast } from 'react-toastify';
 
-export const signInAccount = async (user: {email: string; password: string; }) => {
+export const signInAccount = async (user: {email: string; password: string; }, navigate: (url: string) => void) => {
   try {
-    await account.createEmailSession(user.email, user.password).then(() => {
-      toast.success('Login successful.')
-      location.reload()
+    account.createEmailSession(user.email, user.password).then(() => {
+      navigate('/?new_session=true')
     })
   } catch(err) {
     console.log(err)
@@ -17,20 +16,19 @@ export const signInAccount = async (user: {email: string; password: string; }) =
 
 export const saveUserToDB = async (id: string, user: {email: string; name: string; username: string;}) => {
   try {
-    await databases.createDocument(appwriteConfig.databaseId, appwriteConfig.usersCollectionId, id, user)
+    databases.createDocument(appwriteConfig.databaseId, appwriteConfig.usersCollectionId, id, user)
   } catch(err) {
     console.log(err)
   }
 }
 
-export const createUserAccount = async (user: INewUser) => {
+export const createUserAccount = async (user: INewUser, navigate: (url: string) => void) => {
   const accountID = ID.unique()
   try {
-    await account.create(accountID, user.email, user.password, user.name).then((newUser) => {
+      account.create(accountID, user.email, user.password, user.name).then((newUser) => {
       saveUserToDB(newUser.$id, {email: user.email, name:user.name, username: user.username}).then(() => {
-        signInAccount({ email:user.email, password:user.password }).then(() => {
-          toast.success('Account creation successful.')
-          location.reload()
+        signInAccount({ email:user.email, password:user.password }, navigate).then(() => {
+          navigate('/?first_session=true')
         })
       })
     })

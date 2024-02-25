@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { EyeFilled, EyeInvisibleFilled } from "@ant-design/icons"
 import { signInAccount } from "@/lib/appwrite/api"
 
@@ -18,9 +18,11 @@ const Login = () => {
     password
   }
 
+  const navigate = useNavigate()
+
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    signInAccount(values)
+    signInAccount(values, navigate)
   }
 
   return (

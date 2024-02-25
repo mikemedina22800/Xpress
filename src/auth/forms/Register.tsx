@@ -1,8 +1,7 @@
 import { useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { EyeFilled, EyeInvisibleFilled } from "@ant-design/icons"
 import { createUserAccount } from "@/lib/appwrite/api"
-import { toast } from "react-toastify"
 
 const Register = () => {
   const [firstName, setFirstName] = useState('')
@@ -10,14 +9,12 @@ const Register = () => {
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-
   const [inputType, setInputType] = useState('password')
 
   const toggleVisibility = () => {
     setInputType(inputType === 'password' ? 'text' : 'password')
   }
 
-  
   const values = {
     name: `${firstName} ${lastName}`,
     email,
@@ -25,9 +22,11 @@ const Register = () => {
     password
   }
 
+  const navigate = useNavigate()
+
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    createUserAccount(values)
+    createUserAccount(values, navigate)
   }
 
   return (
