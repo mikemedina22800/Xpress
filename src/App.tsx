@@ -11,6 +11,7 @@ import AuthLayout from './auth/AuthLayout'
 import RootLayout from './root/RootLayout'
 
 export const AuthContext = createContext({
+  loggedIn: false,
   email: '',
   name: '',
   id: '',
@@ -24,6 +25,7 @@ export const AuthContext = createContext({
 const App = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState({
+    loggedIn: false,
     email: '',
     name: '',
     id: '',
@@ -42,7 +44,7 @@ const App = () => {
     } else {
       navigate('/')
     }
-  }, [authCookie])
+  }, [])
 
   const queryClient = new QueryClient()
 

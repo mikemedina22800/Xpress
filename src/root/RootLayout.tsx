@@ -24,6 +24,7 @@ const RootLayout: React.FC<Props> = ({ setUser }) => {
     account.get().then((user) => {
       databases.getDocument(appwriteConfig.databaseId, appwriteConfig.usersCollectionId, user.$id).then((user) => {
         setUser({
+          loggedIn: true,
           email: user.email,
           name: user.name,
           id: user.id,
@@ -38,7 +39,7 @@ const RootLayout: React.FC<Props> = ({ setUser }) => {
   }, [])
 
   useEffect(() => {
-    if (user.name != '') {
+    if (user.loggedIn === true) {
       const name = user.name.split(' ')[0]
       if (firstSession === 'true') {
         toast(`Welcome to Snapagram ${name}! 🎉`, {theme: 'light'})
@@ -52,13 +53,17 @@ const RootLayout: React.FC<Props> = ({ setUser }) => {
 
   return (
     <div className="w-full md:flex">
+      {user.loggedIn === true && 
+        <>
+          <LeftSideBar/>
+          <TopBar/>
+          <section className="flex flex-1 h-full">
+            <Outlet/>
+          </section>
+          <BottomBar/>
+        </>
+      }
       {confetti === true && <ConfettiExplosion/>}
-      <TopBar/>
-      <LeftSideBar/>
-      <section className="flex flex-1 h-full">
-        <Outlet/>
-      </section>
-      <BottomBar/>
     </div>
   )
 }

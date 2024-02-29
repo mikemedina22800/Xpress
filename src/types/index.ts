@@ -32,6 +32,7 @@ export type IUpdatePost = {
 };
 
 export type IUser = {
+  loggedIn: boolean,
   email: string, 
   name: string, 
   id: string, 
