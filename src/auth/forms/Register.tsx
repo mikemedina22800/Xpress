@@ -32,7 +32,7 @@ const Register = () => {
 
   return (
     <form className="sm:w-420 flex-center flex-col gap-10" onSubmit={submit}>
-      <h3 className="text-5xl font-bold mb-10">Snapagram</h3>
+      <h3 className="text-5xl font-bold">Xpress</h3>
       <div className="w-full flex flex-col gap-1">
         <h1>First Name</h1>
         <input 

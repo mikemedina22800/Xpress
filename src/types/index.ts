@@ -8,24 +8,14 @@ export type IUpdateUser = {
   userId: string;
   name: string;
   bio: string;
-  imageId: string;
-  imageUrl: URL | string;
+  photo: URL;
   file: File[];
 };
 
 export type INewPost = {
-  userId: string;
-  caption: string;
-  file: File[];
-  location?: string;
-  tags?: string;
-};
-
-export type IUpdatePost = {
-  postId: string;
-  caption: string;
-  imageId: string;
-  imageUrl: URL;
+  name: string;
+  username: string;
+  text: string;
   file: File[];
   location?: string;
   tags?: string;
