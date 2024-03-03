@@ -21,7 +21,7 @@ const PostForm = () => {
     if (text != '' || fileURL != '') {
       if (fileURL != '') {
         storage.createFile('65c1552b46982d999767', ID.unique(), file[0]).then((file) => {
-          databases.createDocument(appwriteConfig.databaseId, appwriteConfig.postsCollectionId, ID.unique(), {name, username, text, location, tags, datetime: file.$createdAt, imageURL:`https://cloud.appwrite.io/v1/storage/buckets/65c1552b46982d999767/files/${file.$id}/view?project=${appwriteConfig.projectId}`}).then(() => {
+          databases.createDocument(appwriteConfig.databaseId, appwriteConfig.postsCollectionId, ID.unique(), {name, username, text, location, tags, datetime: new Date().toLocaleDateString, imageURL:`https://cloud.appwrite.io/v1/storage/buckets/65c1552b46982d999767/files/${file.$id}/view?project=${appwriteConfig.projectId}`}).then(() => {
             toast('Post uploaded!', {theme: 'light'})
           }).catch((err: Error) => {
             console.log(err)
@@ -30,7 +30,7 @@ const PostForm = () => {
           console.log(err)
         })
       } else {
-        databases.createDocument(appwriteConfig.databaseId, appwriteConfig.postsCollectionId, user.id, {name, username, text, location, tags}).then(() => {
+        databases.createDocument(appwriteConfig.databaseId, appwriteConfig.postsCollectionId, user.id, {name, username, text, location, tags, datetime: new Date().toLocaleDateString}).then(() => {
           toast('Post uploaded!', {theme: 'light'})
         }).catch((err: Error) => {
           console.log(err)
