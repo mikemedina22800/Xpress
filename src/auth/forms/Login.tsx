@@ -1,8 +1,9 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { EyeFilled, EyeInvisibleFilled } from "@ant-design/icons"
-import { signInAccount } from "@/lib/appwrite/api"
 import { Button } from "@/components/ui/button"
+import { account } from "@/lib/appwrite/config"
+import { toast } from "react-toastify"
 
 const Login = () => {
   const [email, setEmail] = useState('')
@@ -13,16 +14,15 @@ const Login = () => {
     setInputType(inputType === 'password' ? 'text' : 'password')
   }
 
-  const values = {
-    email,
-    password
-  }
-
   const navigate = useNavigate()
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    signInAccount(values, navigate)
+    account.createEmailSession(email, password).then(() => {
+      navigate('/?new_session=true')
+    }).catch(() => {
+      toast.error('Invalid email or password.')
+    })
   }
 
   return (

@@ -8,6 +8,7 @@ import { toast } from "react-toastify"
 import ConfettiExplosion from 'react-confetti-explosion';
 import { account, appwriteConfig, databases } from "@/lib/appwrite/config"
 import { IUser } from "@/types"
+import { MoonLoader } from 'react-spinners'
 
 interface Props {
   setUser: React.Dispatch<React.SetStateAction<IUser>>;
@@ -22,19 +23,23 @@ const RootLayout: React.FC<Props> = ({ setUser }) => {
 
   useEffect(() => {
     account.get().then((user) => {
-      databases.getDocument(appwriteConfig.databaseId, appwriteConfig.usersCollectionId, user.$id).then((user) => {
+      databases.getDocument(appwriteConfig.databaseId, appwriteConfig.usersCollectionId, user.$id).then((userDoc) => {
         setUser({
           loggedIn: true,
           email: user.email,
           name: user.name,
-          id: user.id,
-          username: user.username,
-          photo: user.photo,
-          bio: user.bio,
-          posts: user.posts,
-          liked: user.liked
+          id: user.$id,
+          username: userDoc.username,
+          photo: userDoc.photo,
+          bio: userDoc.bio,
+          posts: userDoc.posts,
+          liked: userDoc.liked
         })
+      }).catch(() => {
+        toast.error('Failed to load user information.')
       })
+    }).catch(() => {
+      toast.error('Failed to load user information.')
     })
   }, [])
 
@@ -42,7 +47,7 @@ const RootLayout: React.FC<Props> = ({ setUser }) => {
     if (user.loggedIn === true) {
       const name = user.name.split(' ')[0]
       if (firstSession === 'true') {
-        toast(`Welcome to Snapagram ${name}! 🎉`, {theme: 'light'})
+        toast(`Welcome to Xpress ${name}! 🎉`, {theme: 'light'})
         setConfetti(true)
       }
       if (newSession === 'true') {
@@ -52,19 +57,23 @@ const RootLayout: React.FC<Props> = ({ setUser }) => {
   }, [user])
 
   return (
-    <div className="w-full md:flex">
-      {user.loggedIn === true && 
-        <>
+    <>
+      {user.loggedIn === true ? (
+        <div className="w-full md:flex">
           <LeftSideBar/>
           <TopBar/>
           <section className="flex flex-1 h-full">
             <Outlet/>
           </section>
           <BottomBar/>
-        </>
-      }
-      {confetti === true && <ConfettiExplosion/>}
-    </div>
+          {confetti === true && <ConfettiExplosion/>}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center h-screen w-screen">
+          <MoonLoader color="white" loading={user.loggedIn === false} size={50}/>
+        </div>
+      )}
+    </>
   )
 }
 

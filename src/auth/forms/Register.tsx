@@ -1,8 +1,10 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { EyeFilled, EyeInvisibleFilled } from "@ant-design/icons"
-import { createUserAccount } from "@/lib/appwrite/api"
 import { Button } from "@/components/ui/button"
+import { account, appwriteConfig, avatars, databases } from "@/lib/appwrite/config"
+import { ID } from "appwrite"
+import { toast } from "react-toastify"
 
 const Register = () => {
   const [firstName, setFirstName] = useState('')
@@ -16,22 +18,36 @@ const Register = () => {
     setInputType(inputType === 'password' ? 'text' : 'password')
   }
 
-  const values = {
-    name: `${firstName} ${lastName}`,
-    email,
-    username,
-    password
-  }
-
   const navigate = useNavigate()
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    createUserAccount(values, navigate)
+    const name = `${firstName} ${lastName}`
+    account.create(ID.unique(), email, password, name).then((user) => {
+      databases.createDocument(appwriteConfig.databaseId, appwriteConfig.usersCollectionId, user.$id, {username, photo:avatars.getInitials(user.name)}).then(() => {
+        account.createEmailSession(email, password).then(() => {
+          navigate('/?first_session=true')
+        }).catch((err: Error) => {
+          console.log(err)
+          toast.error('Account created, unable to log in.')
+        })
+      }).catch((err: Error) => {
+        console.log(err)
+        toast.error('Failed to create account.')
+        account.deleteIdentity(user.$id)
+      })
+    }).catch((err: Error) => {
+      console.log(err)
+      if (err.message === 'A user with the same id, email, or phone already exists in this project.') {
+        toast.error('Email is associated with an existing account.')
+      } else {
+        toast.error('Failed to create account.')
+      }
+    })
   }
 
   return (
-    <form className="sm:w-420 flex-center flex-col gap-10" onSubmit={submit}>
+    <form onSubmit={submit} className="sm:w-420 flex-center flex-col gap-10">
       <h3 className="text-5xl font-bold">Xpress</h3>
       <div className="w-full flex flex-col gap-1">
         <h1>First Name</h1>

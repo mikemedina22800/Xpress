@@ -16,6 +16,7 @@ export type INewPost = {
   name: string;
   username: string;
   text: string;
+  isFile: boolean,
   file: File[];
   location?: string;
   tags?: string;
@@ -38,4 +39,6 @@ export type INewUser = {
   email: string;
   username: string;
   password: string;
+  photo:string
+  id: string;
 };

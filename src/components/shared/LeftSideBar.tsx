@@ -4,11 +4,21 @@ import { INavLink } from '@/types'
 import { useContext } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { Button } from '../ui/button'
-import { signOutAccount } from '@/lib/appwrite/api'
+import { account } from '@/lib/appwrite/config'
+import { toast } from 'react-toastify'
 
 const LeftSideBar = () => {
   const user = useContext(AuthContext)
   const { pathname } = useLocation()
+
+  const signOut = async () => {
+    account.deleteSession("current").then(() => {
+      location.reload()
+    }).catch((err: Error) => {
+      console.log(err)
+      toast.error('Failed to log out.')
+    })
+  }
 
   return (
     <nav className='leftsidebar'>
@@ -34,7 +44,7 @@ const LeftSideBar = () => {
           })}
         </ul>
       </div>
-      <Button variant="ghost" className="shad-button_ghost" onClick={() => signOutAccount()}>
+      <Button variant="ghost" className="shad-button_ghost" onClick={() => signOut()}>
         <img src="assets/icons/logout.svg" alt="logout"/>
         <p className='small-medium lg:base-medium'>Logout</p>
       </Button>
