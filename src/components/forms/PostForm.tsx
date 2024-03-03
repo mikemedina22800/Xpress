@@ -1,8 +1,10 @@
-import { useContext, useEffect, useState } from "react"
+import { useContext, useState } from "react"
 import FileUploader from "../shared/FileUploader"
 import { Button } from "../ui/button"
 import { AuthContext } from "@/App"
 import { toast } from "react-toastify"
+import { appwriteConfig, databases, storage } from "@/lib/appwrite/config"
+import { ID } from "appwrite"
 
 const PostForm = () => {
   const user = useContext(AuthContext)
@@ -12,27 +14,35 @@ const PostForm = () => {
   const [file, setFile] = useState<File[]>([])
   const [fileURL, setFileURL] = useState('')
   const [location, setLocation] = useState('')
-  const [tags, setTags] = useState('')
-  const [isFile, setIsFile] = useState(false)
+  const [tags, setTags] = useState<String[]>([])
 
-  useEffect(() => {
-    if (fileURL != '') {
-      setIsFile(true)
-    }
-  }, [fileURL])
-
-  const post = {name, username, text, file, isFile, location, tags}
-
-  const submitPost = (e:React.FormEvent<HTMLFormElement>) => {
+  const submit = (e:React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (text != '' && fileURL != '') {
+    if (text != '' || fileURL != '') {
+      if (fileURL != '') {
+        storage.createFile('65c1552b46982d999767', ID.unique(), file[0]).then((file) => {
+          databases.createDocument(appwriteConfig.databaseId, appwriteConfig.postsCollectionId, ID.unique(), {name, username, text, location, tags, datetime: file.$createdAt, imageURL:`https://cloud.appwrite.io/v1/storage/buckets/65c1552b46982d999767/files/${file.$id}/view?project=${appwriteConfig.projectId}`}).then(() => {
+            toast('Post uploaded!', {theme: 'light'})
+          }).catch((err: Error) => {
+            console.log(err)
+          })
+        }).catch((err: Error) => {
+          console.log(err)
+        })
+      } else {
+        databases.createDocument(appwriteConfig.databaseId, appwriteConfig.postsCollectionId, user.id, {name, username, text, location, tags}).then(() => {
+          toast('Post uploaded!', {theme: 'light'})
+        }).catch((err: Error) => {
+          console.log(err)
+        })
+      }
     } else {
       toast.error('Please provide text and/or image(s).')
     }
   }
 
   return (
-    <form className="flex flex-col gap-9 w-full max-w-5xl">
+    <form onSubmit={submit} className="flex flex-col gap-9 w-full max-w-5xl">
       <div className="flex flex-col gap-3">
         <h1 className="text-xl font-bold">Add text</h1>
         <textarea className="outline-none bg-dark-3 resize-none rounded-xl p-4 w-full h-96" onChange={(e) => {setText(e.target.value)}}/>
@@ -47,7 +57,7 @@ const PostForm = () => {
       </div>
       <div className="flex flex-col gap-3">
         <h1 className="text-xl font-bold">Add Tags</h1>
-        <input className="outline-none bg-dark-3 resize-none rounded-xl p-4 w-full" placeholder="art, expression, learning" onChange={(e) => {setTags(e.target.value)}}/>
+        <input className="outline-none bg-dark-3 resize-none rounded-xl p-4 w-full" placeholder="art expression learning" onChange={(e) => {setTags(e.target.value.split(" "))}}/>
       </div>
       <div className="w-full flex justify-center">
         <Button type="submit" className="w-96 bg-primary-500 text-white rounded-3xl p-4 outline-none font-bold flex justify-center text-xl">Upload</Button>
