@@ -16,12 +16,16 @@ const PostForm = () => {
   const [location, setLocation] = useState('')
   const [tags, setTags] = useState<String[]>([])
 
+  const databaseId = appwriteConfig.databaseId
+  const postsId = appwriteConfig.postsCollectionId
+
   const submit = (e:React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (text != '' || fileURL != '') {
+      const id = ID.unique()
       if (fileURL != '') {
-        storage.createFile('65c1552b46982d999767', ID.unique(), file[0]).then((file) => {
-          databases.createDocument(appwriteConfig.databaseId, appwriteConfig.postsCollectionId, ID.unique(), {name, username, text, location, tags, datetime: new Date().toLocaleDateString, imageURL:`https://cloud.appwrite.io/v1/storage/buckets/65c1552b46982d999767/files/${file.$id}/view?project=${appwriteConfig.projectId}`}).then(() => {
+        storage.createFile('65c1552b46982d999767', id, file[0]).then((file) => {
+          databases.createDocument(databaseId, postsId, id, {name, username, text, location, tags, imageURL:`https://cloud.appwrite.io/v1/storage/buckets/${appwriteConfig.storageId}/files/${file.$id}/view?project=${appwriteConfig.projectId}`}).then(() => {
             toast('Post uploaded!', {theme: 'light'})
           }).catch((err: Error) => {
             console.log(err)
@@ -30,14 +34,14 @@ const PostForm = () => {
           console.log(err)
         })
       } else {
-        databases.createDocument(appwriteConfig.databaseId, appwriteConfig.postsCollectionId, user.id, {name, username, text, location, tags, datetime: new Date().toLocaleDateString}).then(() => {
+        databases.createDocument(databaseId, postsId, id, {name, username, text, location, tags}).then(() => {
           toast('Post uploaded!', {theme: 'light'})
         }).catch((err: Error) => {
           console.log(err)
         })
       }
     } else {
-      toast.error('Please provide text and/or image(s).')
+      toast.error('Please provide text and/or image.')
     }
   }
 

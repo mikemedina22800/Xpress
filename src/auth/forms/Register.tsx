@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { EyeFilled, EyeInvisibleFilled } from "@ant-design/icons"
 import { Button } from "@/components/ui/button"
 import { account, appwriteConfig, avatars, databases } from "@/lib/appwrite/config"
-import { ID } from "appwrite"
+import { ID, Query } from "appwrite"
 import { toast } from "react-toastify"
 
 const Register = () => {
@@ -23,26 +23,35 @@ const Register = () => {
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const name = `${firstName} ${lastName}`
-    account.create(ID.unique(), email, password, name).then((user) => {
-      databases.createDocument(appwriteConfig.databaseId, appwriteConfig.usersCollectionId, user.$id, {username, photo:avatars.getInitials(user.name)}).then(() => {
-        account.createEmailSession(email, password).then(() => {
-          navigate('/?first_session=true')
+    databases.listDocuments(appwriteConfig.databaseId, appwriteConfig.usersCollectionId, [Query.equal("username", [username])]).then((user) => {
+      if (user.total === 0) {
+        account.create(ID.unique(), email, password, name).then((user) => {
+          databases.createDocument(appwriteConfig.databaseId, appwriteConfig.usersCollectionId, user.$id, {username, photo:avatars.getInitials(user.name)}).then(() => {
+            account.createEmailSession(email, password).then(() => {
+              navigate('/?first_session=true')
+            }).catch((err: Error) => {
+              console.log(err)
+              toast.error('Account created, unable to log in.')
+            })
+          }).catch((err: Error) => {
+            console.log(err)
+            toast.error('Failed to create account.')
+            account.deleteIdentity(user.$id)
+          })
         }).catch((err: Error) => {
           console.log(err)
-          toast.error('Account created, unable to log in.')
+          if (err.message === 'A user with the same id, email, or phone already exists in this project.') {
+            toast.error('Email is associated with existing account.')
+          } else {
+            toast.error('Failed to create account.')
+          }
         })
-      }).catch((err: Error) => {
-        console.log(err)
-        toast.error('Failed to create account.')
-        account.deleteIdentity(user.$id)
-      })
+      } else {
+        toast.error("Username is taken.")
+      }
     }).catch((err: Error) => {
       console.log(err)
-      if (err.message === 'A user with the same id, email, or phone already exists in this project.') {
-        toast.error('Email is associated with an existing account.')
-      } else {
-        toast.error('Failed to create account.')
-      }
+      toast.error('Failed to create account.')
     })
   }
 

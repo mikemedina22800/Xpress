@@ -21,26 +21,30 @@ const RootLayout: React.FC<Props> = ({ setUser }) => {
   const newSession = query.get('new_session')
   const [confetti, setConfetti] = useState(false)
 
+  const authCookie = localStorage.getItem('cookieFallback')
+
   useEffect(() => {
-    account.get().then((user) => {
-      databases.getDocument(appwriteConfig.databaseId, appwriteConfig.usersCollectionId, user.$id).then((userDoc) => {
-        setUser({
-          loggedIn: true,
-          email: user.email,
-          name: user.name,
-          id: user.$id,
-          username: userDoc.username,
-          photo: userDoc.photo,
-          bio: userDoc.bio,
-          posts: userDoc.posts,
-          liked: userDoc.liked
+    if (authCookie !== '[]' && authCookie !== null) {
+      account.get().then((user) => {
+        databases.getDocument(appwriteConfig.databaseId, appwriteConfig.usersCollectionId, user.$id).then((userDoc) => {
+          setUser({
+            loggedIn: true,
+            email: user.email,
+            name: user.name,
+            id: user.$id,
+            username: userDoc.username,
+            photo: userDoc.photo,
+            bio: userDoc.bio,
+            posts: userDoc.posts,
+            liked: userDoc.liked
+          })
+        }).catch(() => {
+          toast.error('Failed to load user information.')
         })
       }).catch(() => {
         toast.error('Failed to load user information.')
       })
-    }).catch(() => {
-      toast.error('Failed to load user information.')
-    })
+    }
   }, [])
 
   useEffect(() => {
