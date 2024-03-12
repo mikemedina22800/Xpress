@@ -25,7 +25,7 @@ const PostForm = () => {
       const id = ID.unique()
       if (fileURL != '') {
         storage.createFile('65c1552b46982d999767', id, file[0]).then((file) => {
-          databases.createDocument(databaseId, postsId, id, {name, username, text, location, tags, imageURL:`https://cloud.appwrite.io/v1/storage/buckets/${appwriteConfig.storageId}/files/${file.$id}/view?project=${appwriteConfig.projectId}`}).then(() => {
+          databases.createDocument(databaseId, postsId, id, {name, username, text, location, tags, imageURL:`https://cloud.appwrite.io/v1/storage/buckets/${appwriteConfig.storageId}/files/${file.$id}/view?project=${appwriteConfig.projectId}`, photo: user.photo}).then(() => {
             toast('Post uploaded!', {theme: 'light'})
           }).catch((err: Error) => {
             console.log(err)
